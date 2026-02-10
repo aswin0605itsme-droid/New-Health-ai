@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Send, Sparkles, AlertCircle, X, MessageSquare, Mic, MicOff, Copy, Check } from 'lucide-react';
+import { Upload, FileText, Send, Sparkles, X, MessageSquare, Mic, MicOff, Copy, Check, Camera, Aperture } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { GlassButton } from './ui/GlassButton';
 import { analyzeLabReport, createChatSession, sendChatMessage } from '../services/geminiService';
@@ -26,6 +26,12 @@ export const AnalysisView: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  
+  // Camera States
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +51,60 @@ export const AnalysisView: React.FC = () => {
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Camera Functions
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setIsCameraOpen(true);
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Could not access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOpen(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const context = canvas.getContext('2d');
+      if (context) {
+        // Draw the current video frame to the canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to data URL
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        setImage(dataUrl);
+        setMimeType('image/jpeg');
+        
+        // Reset state
+        setAnalysis(null);
+        setMessages([]);
+        setChatSession(null);
+        
+        stopCamera();
+      }
     }
   };
 
@@ -108,8 +168,6 @@ export const AnalysisView: React.FC = () => {
 
   const toggleListening = () => {
     if (isListening) {
-      // Stop logic is handled by onend usually, but we can force stop if needed
-      // Currently simple implementation relies on browser stopping
       setIsListening(false);
       return;
     }
@@ -171,6 +229,44 @@ export const AnalysisView: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8 animate-float">
+      {/* Hidden Canvas for Capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Camera Overlay Modal */}
+      {isCameraOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out]">
+          <div className="relative w-full max-w-3xl aspect-[3/4] md:aspect-video rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/20">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Camera Controls */}
+            <div className="absolute bottom-0 left-0 w-full p-8 flex items-center justify-center gap-8 bg-gradient-to-t from-black/80 to-transparent">
+              <button 
+                onClick={stopCamera}
+                className="p-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <button 
+                onClick={capturePhoto}
+                className="p-6 rounded-full bg-white text-cyan-600 hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] ring-4 ring-white/30"
+              >
+                <Aperture className="w-8 h-8" />
+              </button>
+              
+              <div className="w-14" /> {/* Spacer for symmetry */}
+            </div>
+          </div>
+          <p className="mt-4 text-white/50 text-sm font-medium">Position document and tap shutter</p>
+        </div>
+      )}
+
       {/* Upload Section */}
       {!analysis && (
         <GlassCard className="p-8 text-center transition-all duration-500">
@@ -181,27 +277,42 @@ export const AnalysisView: React.FC = () => {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold text-white tracking-tight">Upload Lab Report</h2>
               <p className="text-slate-400 max-w-sm mx-auto">
-                Scan or upload your medical lab report for instant AI-powered insights and analysis.
+                Scan using camera or upload your medical lab report for instant AI-powered insights.
               </p>
             </div>
             
             {!image ? (
-              <div className="relative group">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                />
-                <GlassButton variant="primary" className="group-hover:scale-105">
-                  <FileText className="w-5 h-5" />
-                  <span>Select Image</span>
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full max-w-md">
+                {/* File Input Button */}
+                <div className="relative group w-full">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                  />
+                  <GlassButton variant="primary" className="w-full group-hover:scale-[1.02]">
+                    <FileText className="w-5 h-5" />
+                    <span>Select Image</span>
+                  </GlassButton>
+                </div>
+
+                <div className="text-slate-500 font-medium">OR</div>
+
+                {/* Camera Button */}
+                <GlassButton 
+                  variant="secondary" 
+                  onClick={startCamera}
+                  className="w-full hover:scale-[1.02] hover:text-white"
+                >
+                  <Camera className="w-5 h-5" />
+                  <span>Take Photo</span>
                 </GlassButton>
               </div>
             ) : (
               <div className="space-y-6 w-full max-w-md">
-                <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-                  <img src={image} alt="Preview" className="w-full h-64 object-cover" />
+                <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black/40">
+                  <img src={image} alt="Preview" className="w-full h-64 object-contain" />
                   <button 
                     onClick={clearImage}
                     className="absolute top-2 right-2 p-2 bg-black/50 backdrop-blur-md rounded-full hover:bg-black/70 transition-colors"
