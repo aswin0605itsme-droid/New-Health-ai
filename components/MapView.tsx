@@ -10,6 +10,7 @@ export const MapView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MapResult | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const handleFindLocation = () => {
     setLoading(true);
@@ -26,6 +27,8 @@ export const MapView: React.FC = () => {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          
           const data = await findMedicalCenter(latitude, longitude);
           setResult(data);
         } catch (err) {
@@ -92,7 +95,7 @@ export const MapView: React.FC = () => {
            </GlassCard>
 
            {/* Interactive Map Links (Grounding) */}
-           {result.chunks && result.chunks.length > 0 && (
+           {result.chunks && result.chunks.length > 0 ? (
              <div className="grid grid-cols-1 gap-6">
                {result.chunks.map((chunk, idx) => {
                  const mapData = chunk.maps;
@@ -117,7 +120,6 @@ export const MapView: React.FC = () => {
                             alt={`Map preview of ${mapData.title}`}
                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700"
                             onError={(e) => {
-                              // Fallback if image fails (e.g. key permissions)
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
@@ -145,6 +147,24 @@ export const MapView: React.FC = () => {
                  );
                })}
              </div>
+           ) : (
+             /* Fallback Static Map if no chunks are found but we have user location */
+             userLocation && (
+              <GlassCard className="p-0 overflow-hidden border-white/20">
+                 <div className="relative h-48 w-full bg-slate-800">
+                   <img 
+                     src={`https://maps.googleapis.com/maps/api/staticmap?center=${userLocation.lat},${userLocation.lng}&zoom=13&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:Me%7C${userLocation.lat},${userLocation.lng}&key=${process.env.API_KEY}`}
+                     alt="Your Location"
+                     className="w-full h-full object-cover opacity-80"
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                   <div className="absolute bottom-4 left-6">
+                      <h4 className="font-bold text-xl text-white">Your Location</h4>
+                      <p className="text-xs text-slate-400">Map centered on your current position</p>
+                   </div>
+                 </div>
+              </GlassCard>
+             )
            )}
 
            <div className="text-center pt-4">

@@ -23,21 +23,29 @@ export const analyzeLabReport = async (
             },
           },
           {
-            text: `Analyze this medical lab report image using a structured, patient-centric approach.
+            text: `Analyze this medical lab report image.
             
-            1. **Key Biomarkers**: Identify the key values and compare them to standard ranges.
-            2. **Abnormalities**: Clearly highlight any values outside the normal range (High/Low).
-            3. **Interpretation**: Explain what these results might indicate in simple, easy-to-understand terms.
+            **STRICT FORMATTING RULE**: Do NOT use paragraphs. Use ONLY bullet points for all explanations.
+
+            1. **Key Biomarkers**:
+               - List key values.
+               - Compare them to standard ranges.
             
-            4. **🩺 TAILORED HEALTH ACTION PLAN**:
-               Based on the specific results found in this report, provide concrete recommendations:
-               - 🥗 **Dietary Advice**: Specific foods to include or avoid (e.g., "Increase leafy greens for low iron").
-               - 🏃 **Exercise & Lifestyle**: Tailored activity suggestions and lifestyle adjustments (e.g., "Aim for 30 mins of cardio to help lower LDL").
-               - 📅 **Follow-up Plan**: Recommendations for re-testing or specific symptoms to watch for.
+            2. **Abnormalities**:
+               - Highlight values outside the normal range (High/Low).
+            
+            3. **Interpretation**:
+               - Explain what these results indicate in simple terms.
+            
+            4. **🩺 Tailored Health Action Plan**:
+               - 🥗 **Diet**: Specific foods to include/avoid.
+               - 🏃 **Lifestyle**: Activity suggestions.
+               - 📅 **Follow-up**: Re-testing recommendations.
                
-            5. **📋 Summary Table**: Create a markdown table summarizing the findings with columns: [Test Name, Value, Status, Recommended Action].
+            5. **📋 Summary Table**:
+               - Create a markdown table: [Test Name, Value, Status, Recommended Action].
             
-            Be professional, empathetic, and reassuring. **Disclaimer**: Always advise consulting a doctor for a final diagnosis and before starting new treatments.`
+            Be professional, empathetic, and reassuring. Always advise consulting a doctor.`
           },
         ],
       },
@@ -62,7 +70,7 @@ export const createChatSession = (base64Image: string, mimeType: string): Chat =
   return ai.chats.create({
     model: 'gemini-3-pro-preview',
     config: {
-      systemInstruction: "You are a helpful and knowledgeable medical AI assistant. You have access to the user's lab report. Answer their follow-up questions clearly and safely. Do not provide medical diagnoses or prescriptions. Always encourage seeing a professional.",
+      systemInstruction: "You are a helpful and knowledgeable medical AI assistant. You have access to the user's lab report. Answer their follow-up questions clearly and safely using bullet points where possible. Do not provide medical diagnoses or prescriptions. Always encourage seeing a professional.",
     },
     history: [
       {
