@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Send, Sparkles, AlertCircle, X, MessageSquare, Mic, MicOff } from 'lucide-react';
+import { Upload, FileText, Send, Sparkles, AlertCircle, X, MessageSquare, Mic, MicOff, Copy, Check } from 'lucide-react';
 import { GlassCard } from './ui/GlassCard';
 import { GlassButton } from './ui/GlassButton';
 import { analyzeLabReport, createChatSession, sendChatMessage } from '../services/geminiService';
@@ -25,6 +25,7 @@ export const AnalysisView: React.FC = () => {
   const [chatSession, setChatSession] = useState<Chat | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +147,17 @@ export const AnalysisView: React.FC = () => {
     recognition.start();
   };
 
+  const handleCopy = async () => {
+    if (!analysis) return;
+    try {
+      await navigator.clipboard.writeText(analysis);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -217,14 +229,24 @@ export const AnalysisView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[800px]">
           {/* Left: Report & Analysis */}
           <GlassCard className="p-6 overflow-y-auto scrollbar-hide flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-900/0 backdrop-blur-xl pb-4 border-b border-white/10 z-10">
+            <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-900/80 backdrop-blur-xl pb-4 border-b border-white/10 z-10 transition-all">
               <h3 className="text-xl font-semibold text-cyan-300 flex items-center gap-2">
                 <FileText className="w-5 h-5" />
                 Report Analysis
               </h3>
-              <button onClick={clearImage} className="text-xs text-slate-400 hover:text-white transition-colors">
-                New Analysis
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-cyan-300 transition-all active:scale-95"
+                  title="Copy to clipboard"
+                >
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {isCopied ? 'Copied' : 'Copy'}
+                </button>
+                <button onClick={clearImage} className="text-xs text-slate-400 hover:text-white transition-colors">
+                  New Analysis
+                </button>
+              </div>
             </div>
             <div className="prose prose-invert prose-sm max-w-none text-slate-300">
               <ReactMarkdown>{analysis}</ReactMarkdown>

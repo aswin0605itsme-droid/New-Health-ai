@@ -93,32 +93,53 @@ export const MapView: React.FC = () => {
 
            {/* Interactive Map Links (Grounding) */}
            {result.chunks && result.chunks.length > 0 && (
-             <div className="grid grid-cols-1 gap-4">
+             <div className="grid grid-cols-1 gap-6">
                {result.chunks.map((chunk, idx) => {
                  const mapData = chunk.maps;
                  if (!mapData) return null;
                  
+                 // Construct static map URL using the title as the center/marker
+                 const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(mapData.title)}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(mapData.title)}&key=${process.env.API_KEY}`;
+
                  return (
                    <a 
                      key={idx} 
                      href={mapData.uri} 
                      target="_blank" 
                      rel="noopener noreferrer"
-                     className="block group"
+                     className="block group relative overflow-hidden rounded-3xl transition-all duration-500 hover:scale-[1.01]"
                    >
-                     <GlassCard className="p-4 flex items-center justify-between group-hover:bg-white/10 transition-colors">
-                       <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10">
-                            <MapPin className="w-6 h-6 text-red-400" />
-                         </div>
-                         <div>
-                           <h4 className="font-semibold text-white group-hover:text-cyan-300 transition-colors">
-                             {mapData.title}
-                           </h4>
-                           <p className="text-sm text-slate-400">View on Google Maps</p>
-                         </div>
+                     <GlassCard className="p-0 overflow-hidden group-hover:bg-white/10 transition-colors border-white/20">
+                       <div className="relative h-48 w-full bg-slate-800">
+                          {/* Map Preview Image */}
+                          <img 
+                            src={staticMapUrl}
+                            alt={`Map preview of ${mapData.title}`}
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700"
+                            onError={(e) => {
+                              // Fallback if image fails (e.g. key permissions)
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          {/* Overlay Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+                          
+                          <div className="absolute bottom-0 left-0 p-6 w-full flex items-end justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-pink-600/20 backdrop-blur-md flex items-center justify-center border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+                                  <MapPin className="w-6 h-6 text-pink-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-xl text-white group-hover:text-cyan-300 transition-colors">
+                                  {mapData.title}
+                                </h4>
+                                <p className="text-sm text-slate-300 group-hover:text-white transition-colors flex items-center gap-1">
+                                  Tap to view on Google Maps <ExternalLink className="w-3 h-3" />
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                        </div>
-                       <ExternalLink className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
                      </GlassCard>
                    </a>
                  );
@@ -126,7 +147,7 @@ export const MapView: React.FC = () => {
              </div>
            )}
 
-           <div className="text-center">
+           <div className="text-center pt-4">
              <button 
                onClick={handleFindLocation}
                className="text-slate-400 hover:text-white transition-colors text-sm underline decoration-slate-600 hover:decoration-white underline-offset-4"
