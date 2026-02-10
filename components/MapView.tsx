@@ -12,6 +12,9 @@ export const MapView: React.FC = () => {
   const [result, setResult] = useState<MapResult | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
+  // Retrieve API Key correctly for Vite
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
   const handleFindLocation = () => {
     setLoading(true);
     setError(null);
@@ -47,10 +50,10 @@ export const MapView: React.FC = () => {
 
   const getFallbackMapUrl = () => {
     if (userLocation) {
-      return `https://maps.googleapis.com/maps/api/staticmap?center=${userLocation.lat},${userLocation.lng}&zoom=14&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:Me%7C${userLocation.lat},${userLocation.lng}&key=${process.env.API_KEY}`;
+      return `https://maps.googleapis.com/maps/api/staticmap?center=${userLocation.lat},${userLocation.lng}&zoom=14&size=600x300&maptype=roadmap&markers=color:blue%7Clabel:Me%7C${userLocation.lat},${userLocation.lng}&key=${apiKey}`;
     }
     // Default fallback (e.g., general view)
-    return `https://maps.googleapis.com/maps/api/staticmap?center=Hospital&zoom=10&size=600x300&maptype=roadmap&key=${process.env.API_KEY}`;
+    return `https://maps.googleapis.com/maps/api/staticmap?center=Hospital&zoom=10&size=600x300&maptype=roadmap&key=${apiKey}`;
   };
 
   return (
@@ -123,7 +126,7 @@ export const MapView: React.FC = () => {
                  const mapData = chunk.maps;
                  if (!mapData) return null;
                  
-                 const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(mapData.title)}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(mapData.title)}&key=${process.env.API_KEY}`;
+                 const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(mapData.title)}&zoom=15&size=600x300&maptype=roadmap&markers=color:red%7C${encodeURIComponent(mapData.title)}&key=${apiKey}`;
 
                  return (
                    <a 

@@ -5,7 +5,7 @@ import { GlassButton } from './ui/GlassButton';
 import { analyzeLabReport, createChatSession, sendChatMessage } from '../services/geminiService';
 import { Message, Sender } from '../types';
 import ReactMarkdown from 'react-markdown';
-import { Chat } from '@google/genai';
+import { ChatSession } from '@google/generative-ai';
 
 // Add type definition for window.SpeechRecognition
 declare global {
@@ -22,7 +22,7 @@ export const AnalysisView: React.FC = () => {
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [chatSession, setChatSession] = useState<Chat | null>(null);
+  const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
