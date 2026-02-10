@@ -1,0 +1,9 @@
+{
+  "name": "MediGlass AI",
+  "description": "A next-generation, glassmorphic health companion app powered by Gemini. Analyze lab reports with deep reasoning and find nearby medical centers with AI-guided routes.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation",
+    "microphone"
+  ]
+}
