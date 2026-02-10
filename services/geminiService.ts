@@ -70,7 +70,7 @@ export const createChatSession = (base64Image: string, mimeType: string): Chat =
   return ai.chats.create({
     model: 'gemini-3-pro-preview',
     config: {
-      systemInstruction: "You are a helpful and knowledgeable medical AI assistant. You have access to the user's lab report. Answer their follow-up questions clearly and safely using bullet points where possible. Do not provide medical diagnoses or prescriptions. Always encourage seeing a professional.",
+      systemInstruction: "You are a helpful and knowledgeable medical AI assistant. You have access to the user's lab report. Answer their follow-up questions clearly and safely using strictly bullet points. Do NOT use paragraphs. Do not provide medical diagnoses or prescriptions. Always encourage seeing a professional.",
     },
     history: [
       {
